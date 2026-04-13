@@ -1,0 +1,3 @@
+<template>
+  вцфвцф
+</template>
