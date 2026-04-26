@@ -26,7 +26,7 @@ const loadGoals = async () => {
 
 // Переход к цели (например, в детальный просмотр)
 const openGoal = (goalId) => {
-  router.push(`/goals/${goalId}`);
+  router.push(`/goal/${goalId}`);
 };
 
 // Форматирование даты

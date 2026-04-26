@@ -6,6 +6,7 @@ import RegistrationComponent from '@/registration/RegistrationComponent.vue'
 import UserProfile from '@/profile/UserProfile.vue'
 import { useAuthStore } from '@/stores/auth'
 import CreateGoal from '@/goal/CreateGoal.vue'
+import GoalDetail from '@/goal_details/GoalDetail.vue'
 
 const routes = [
   {
@@ -36,6 +37,13 @@ const routes = [
     name: 'Create goal',
     component: CreateGoal,
     meta: { requiresAuth: true },
+  },
+  {
+    path: '/goal/:id',
+    name: 'Goal',
+    component: GoalDetail,
+    props: true,
+    meta: { requiredAuth: true },
   },
   // {
   //   path: '/:slug',

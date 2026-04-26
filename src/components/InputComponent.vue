@@ -1,6 +1,6 @@
 <template>
-  <input class="input_component" :type="type" :value="modelValue" @input="handleInput" :placeholder="placeholder"
-    required>
+  <input class="input_component" :type="type" :value="modelValue" @input="handleInput" @change="handleChange"
+    :placeholder="placeholder" required>
 </template>
 
 <script setup>
@@ -12,7 +12,11 @@ defineProps({
   type: String,
 })
 
-const emit = defineEmits(['update:modelValue'])
+const emit = defineEmits(['update:modelValue', 'change'])
+
+const handleChange = (event) => {
+  emit('change', event.target.value)
+}
 
 const handleInput = (event) => {
   const value = event.target.value
@@ -23,17 +27,17 @@ const handleInput = (event) => {
 <style scoped>
 .input_component {
   padding: 12px 16px;
-  border: 1px solid #ddd;
+  border: 2px solid var(--color-primary);
   border-radius: 6px;
   font-size: 16px;
   box-sizing: border-box;
-  transition: border-color 0.3s;
+  transition: border-color 0.3s ease;
 }
 
 .input_component:focus {
   outline: none;
-  border-color: #3498db;
-  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+  border-color: var(--color-primary-blue);
+  outline: none;
 }
 
 .input_component::placeholder {

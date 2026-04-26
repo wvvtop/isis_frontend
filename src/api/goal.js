@@ -6,4 +6,8 @@ export const goalApi = {
   getAllGoals: () => {
     return apiClient.get('/goals')
   },
+
+  getGoalWithMilestones: (id) => {
+    return apiClient.get('/goals/' + id)
+  },
 }

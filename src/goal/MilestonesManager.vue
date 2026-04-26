@@ -1,49 +1,3 @@
-<script setup>
-import { computed } from 'vue';
-import MilestoneItem from './MilestoneItem.vue';
-
-const props = defineProps({
-  modelValue: {
-    type: Array,
-    default: () => []
-  },
-  goal: {
-    type: Object,
-    required: true
-  }
-});
-
-const emit = defineEmits(['update:modelValue']);
-
-const milestones = computed({
-  get: () => props.modelValue,
-  set: (val) => emit('update:modelValue', val)
-});
-
-const addMilestone = () => {
-  const last = milestones.value[milestones.value.length - 1];
-
-  milestones.value.push({
-    title: '',
-    startDate: last?.endDate || props.goal.startDate || '',
-    endDate: '',
-    tasks: {}
-  });
-};
-
-const removeMilestone = (index) => {
-  if (confirm(`Вы действительно хотите удалить этап №${index + 1}?`)) {
-    milestones.value.splice(index, 1);
-  }
-};
-
-const updateMilestone = (index, value) => {
-  const updated = [...milestones.value];
-  updated[index] = value;
-  milestones.value = updated;
-};
-</script>
-
 <template>
   <div class="milestones-manager">
     <div class="milestones-header">
@@ -55,17 +9,60 @@ const updateMilestone = (index, value) => {
       <p>Пока нет ни одного этапа.<br>Нажмите кнопку ниже, чтобы добавить первый этап.</p>
     </div>
 
-    <MilestoneItem v-for="(milestone, index) in milestones" :key="index" :modelValue="milestone" :goal="goal"
-      :index="index" :milestones="milestones" @update:modelValue="val => updateMilestone(index, val)"
-      @remove="() => removeMilestone(index)" />
+    <MilestoneCard v-for="(milestone, index) in milestones" :key="index" :milestone="milestone" :goal="goal"
+      :index="index" @update:modelValue="updateMilestone(index, $event)" @remove="removeMilestone(index)" />
 
-    <button class="btn-add-milestone" @click="addMilestone">
-      + Добавить новый этап
-    </button>
+    <div class="milestones-manager__btn_add_milestone">
+      <ButtonComponent text="+ Добавить новый этап" @action="addMilestone" />
+    </div>
   </div>
 </template>
 
+<script setup>
+import { computed, provide } from 'vue';
+import ButtonComponent from '@/components/ButtonComponent.vue';
+import MilestoneCard from './milestone/MilestoneCard.vue';
+import { useGoalCreationStore } from './stores/useGoalCreationStore';
+
+const props = defineProps({
+  modelValue: { type: Array, default: () => [] },
+  goal: { type: Object, required: true }
+});
+
+const emit = defineEmits(['update:modelValue']);
+
+const store = useGoalCreationStore();
+
+// Предоставляем store всем дочерним компонентам
+provide('goalStore', store);
+
+const milestones = computed({
+  get: () => props.modelValue,
+  set: (val) => emit('update:modelValue', val)
+});
+
+const addMilestone = () => {
+  store.addMilestone();
+  // После добавления в store обновляем локальный computed
+  milestones.value = store.goal.milestones;
+};
+
+const removeMilestone = (index) => {
+  store.removeMilestone(index);
+  milestones.value = store.goal.milestones;
+};
+
+const updateMilestone = (index, updatedMilestone) => {
+  store.updateMilestone(index, updatedMilestone);
+  milestones.value = store.goal.milestones;
+};
+</script>
+
 <style scoped>
+.milestones-manager__btn_add_milestone {
+  text-align: center;
+}
+
 .milestones-manager {
   margin-bottom: 60px;
 }
@@ -96,29 +93,5 @@ const updateMilestone = (index, value) => {
   color: #64748b;
   font-size: 17px;
   margin-bottom: 32px;
-}
-
-.btn-add-milestone {
-  width: 100%;
-  background: #6366f1;
-  color: white;
-  border: none;
-  padding: 18px 24px;
-  font-size: 17px;
-  font-weight: 600;
-  border-radius: 16px;
-  cursor: pointer;
-  transition: all 0.25s ease;
-  box-shadow: 0 4px 15px -2px rgba(99, 102, 241, 0.3);
-}
-
-.btn-add-milestone:hover {
-  background: #4f46e5;
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px -4px rgba(99, 102, 241, 0.4);
-}
-
-.btn-add-milestone:active {
-  transform: scale(0.98);
 }
 </style>

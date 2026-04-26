@@ -2,66 +2,33 @@
 import PageLayout from '@/layouts/PageLayout.vue';
 import GoalTitleComponent from './GoalTitleComponent.vue';
 import MilestonesManager from './MilestonesManager.vue';
-import { ref } from 'vue';
 import ButtonComponent from '@/components/ButtonComponent.vue';
-import { goalApi } from '@/api/goal';
+import { useGoalCreationStore } from './stores/useGoalCreationStore';
+import { computed } from 'vue';
 import router from '@/router';
 
+const store = useGoalCreationStore();
 
-
-const goal = ref({
-  title: '',
-  description: '',
-  startDate: '',
-  endDate: '',
-  milestones: []
+const goal = computed({
+  get: () => store.goal,
+  set: (val) => { /* store сам управляет состоянием */ }
 });
 
-const handleSubmit = async () => {
-  if (!validateGoal()) {
-    alert('Пожалуйста, заполните все обязательные поля!');
-    return;
+// Передаём цель в MilestonesManager через v-model
+const milestones = computed({
+  get: () => store.goal.milestones,
+  set: (val) => {
+    store.goal.milestones = val;
   }
+});
 
-  try {
-    const response = await goalApi.createGoal(goal.value);
-
-    console.log('Цель успешно создана! ID:', response.data);
-    alert(`Цель создана! ID = ${response.data}`);
-
-    // Можно сделать редирект на страницу списка целей
-    // router.push('/goals');
-    router.push("/")
-  } catch (error) {
-    console.error('Ошибка при создании цели:', error.response?.data || error.message);
-    alert('Ошибка при создании цели: ' + (error.response?.data?.message || error.message));
-  }
-  console.log('Создаём цель:', goal.value);
-  // Здесь будет отправка на сервер
+const handleSubmit = () => {
+  store.handleSubmit();
 };
 
-const validateGoal = () => {
-  // 1. Проверка основной цели
-  if (!goal.value.title?.trim()) return false;
-  if (!goal.value.startDate) return false;
-  if (!goal.value.endDate) return false;
-
-  // 2. Проверка этапов
-  if (goal.value.milestones.length === 0) return false;
-
-  for (const milestone of goal.value.milestones) {
-    if (!milestone.title?.trim()) return false;
-    if (!milestone.startDate) return false;
-    if (!milestone.endDate) return false;
-
-    // Проверка хотя бы одной задачи (по желанию)
-    const hasTasks = Object.values(milestone.tasks || {}).some(day =>
-      (day.main && day.main.length > 0) || (day.side && day.side.length > 0)
-    );
-    if (!hasTasks) return false; // можно убрать, если задачи не обязательны
-  }
-
-  return true;
+const handleGoalUpdate = (updatedGoal) => {
+  // Обновляем основную цель через store (title, description, даты)
+  Object.assign(store.goal, updatedGoal);
 };
 </script>
 
@@ -74,8 +41,11 @@ const validateGoal = () => {
           <p>Разбейте большую цель на этапы и ежедневные задачи</p>
         </div>
 
-        <GoalTitleComponent v-model="goal" />
-        <MilestonesManager v-model="goal.milestones" :goal="goal" />
+        <!-- Основная информация о цели -->
+        <GoalTitleComponent :modelValue="store.goal" @update:modelValue="handleGoalUpdate" />
+
+        <!-- Управление этапами -->
+        <MilestonesManager :modelValue="milestones" :goal="store.goal" />
 
         <div class="submit-wrapper">
           <ButtonComponent @action="handleSubmit" text="Создать цель" />
@@ -84,7 +54,6 @@ const validateGoal = () => {
     </template>
   </PageLayout>
 </template>
-
 
 <style scoped>
 .create-goal-container {
@@ -110,5 +79,10 @@ const validateGoal = () => {
   font-size: 19px;
   color: #64748b;
   margin: 0;
+}
+
+.submit-wrapper {
+  text-align: center;
+  margin-top: 40px;
 }
 </style>
